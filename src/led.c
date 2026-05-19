@@ -9,7 +9,7 @@
 void led_init() {
   // prepare ledc timer config
   ledc_timer_config_t t = {
-      .bit_num = LEDC_TIMER_10_BIT, .freq_hz = 5000, .speed_mode = LEDC_HIGH_SPEED_MODE, .timer_num = LEDC_TIMER_0};
+      .duty_resolution = LEDC_TIMER_10_BIT, .freq_hz = 5000, .speed_mode = LEDC_HIGH_SPEED_MODE, .timer_num = LEDC_TIMER_0};
 
   // configure ledc timer
   ESP_ERROR_CHECK(ledc_timer_config(&t));

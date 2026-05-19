@@ -7,8 +7,8 @@
 
 // https://github.com/PaulStoffregen/Encoder/blob/master/Encoder.h
 
-#define ENCODER_A_SEL GPIO_SEL_22
-#define ENCODER_B_SEL GPIO_SEL_21
+#define ENCODER_A_SEL BIT64(22)
+#define ENCODER_B_SEL BIT64(21)
 
 #define ENCODER_A_NUM GPIO_NUM_22
 #define ENCODER_B_NUM GPIO_NUM_21

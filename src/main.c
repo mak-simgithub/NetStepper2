@@ -2,7 +2,7 @@
 #include <naos/ble.h>
 #include <naos/wifi.h>
 #include <naos/mqtt.h>
-#include <naos/manager.h>
+#include <naos/bridge.h>
 #include <naos/sys.h>
 #include <art32/numbers.h>
 #include <art32/smooth.h>
@@ -289,8 +289,8 @@ static naos_param_t params[] = {
 };
 
 static naos_config_t config = {
-    .device_type = "NetStepper2",
-    .device_version = "0.6.0",
+    .app_name = "NetStepper2",
+    .app_version = "0.6.0",
     .parameters = params,
     .num_parameters = sizeof(params) / sizeof(naos_param_t),
     .ping_callback = ping,
@@ -325,7 +325,7 @@ void app_main() {
   naos_ble_init((naos_ble_config_t){});
   naos_wifi_init();
   naos_mqtt_init(1);
-  naos_manager_init();
+  naos_bridge_install();
   naos_start();
 
   // set minimum speed

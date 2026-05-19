@@ -6,8 +6,8 @@
 
 #include "end_stop.h"
 
-#define END_STOP_1_SEL GPIO_SEL_32
-#define END_STOP_2_SEL GPIO_SEL_33
+#define END_STOP_1_SEL BIT64(32)
+#define END_STOP_2_SEL BIT64(33)
 
 #define END_STOP_1_NUM GPIO_NUM_32
 #define END_STOP_2_NUM GPIO_NUM_33
@@ -71,14 +71,14 @@ void end_stop_task(void* _) {
 
 void end_stop_init(end_stop_handler_t handler, bool analog) {
   // set ADC capture width
-  adc1_config_width(ADC_WIDTH_10Bit);
+  adc1_config_width(ADC_WIDTH_BIT_10);
 
   // set flag
   end_stop_analog = analog;
 
   // setup adc
-  adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_11db);
-  adc1_config_channel_atten(ADC1_CHANNEL_5, ADC_ATTEN_11db);
+  adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_11);
+  adc1_config_channel_atten(ADC1_CHANNEL_5, ADC_ATTEN_DB_11);
 
   // skip isr setup in analog mode
   if (analog) {

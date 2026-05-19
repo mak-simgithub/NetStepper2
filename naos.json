@@ -1,6 +1,9 @@
 {
-  "version": "v0.11.1",
+  "version": "f0655ea",
   "target": "esp32",
+  "overrides": {
+    "CONFIG_ESP_WIFI_RX_IRAM_OPT": "n"
+  },
   "components": {
     "art32": {
       "repository": "https://github.com/256dpi/art32.git",
