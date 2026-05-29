@@ -2,3 +2,4 @@ cmake-build-debug/
 naos/
 *.s#*
 *.b#*
+.DS_Store
