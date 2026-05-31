@@ -28,3 +28,49 @@ A networked stepper motor controller based on the ESP-WROOM-32 and the L6470. Ex
 ## Notes
 
 - ESP32 from Adafruit do not come in a tape/reel.
+
+## Usage
+- install [NAOS](https://github.com/256dpi/naos) on your machine
+- power and connect NetStepper2 via USB to your machine
+- try to connect to NAOS with `naos-explorer`. if it doesn't work, the NAOS version on the NetStepper 2 is to old and you have to update it (see below)
+- with `naos attach` you can read diagnostics of your NAOS over USB
+- configure NAOS in `naos-explorer`
+    - `device-name`: no relevance
+    - `base-topic`: base topic to adress specific device `<MQTT_BASETOPIC>`
+    - `wifi-ssid`: SSID of WiFi network
+    - `wifi-password`: password of WiFi network
+    - `mqtt-host`: hostname or IP of MQTT broker `<MQTT_HOST>`
+    - `mqtt-port`: MQTT port `<MQTT_PORT>`
+    - `mqtt-client-id`: no relevance
+    - `mqtt-username`: MQTT username `<MQTT_USER>`
+    - `mqtt-password`: MQTT password `<MQTT_PWD>`
+    - `mqtt-configure`: send action after setting above values
+- if diagnostics look ok, you can start to publish and subscribe to topics
+
+### MQTT Topics
+
+publish to topics over mqtt `mosquitto_pub -h <MQTT_HOST> -p <MQTT_PORT> -u <MQTT_USER> -P <MQTT_PWD> -t <MQTT_BASETOPIC>/<MQTT_TOPIC> -n`
+
+- `forward`: move forward
+- `backward`: move backward
+- `stop`: stop
+- `target <TARGET>`: move to position `<TARGET>`
+- `reset`: set home
+- `home`: move home
+
+subscribe to topics with `mosquitto_sub -h <MQTT_HOST> -p <MQTT_PORT> -u <MQTT_USER> -P <MQTT_PWD> -t <MQTT_BASETOPIC>/# -v`
+
+- `position`: position of stepper motor
+- `speed`: speed of stepper motor
+- `running`: true if stepper motor is running
+- `#`: all topics
+
+
+### Update
+- install [NAOS](https://github.com/256dpi/naos) on your machine
+- clone this repo
+- power and connect NetStepper2 via USB to your machine
+- `naos install`
+- `naos build --reconfigure`
+- `naos run`
+- if `naos-explorer` can connect, you were succesful

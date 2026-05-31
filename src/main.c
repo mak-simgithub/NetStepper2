@@ -6,7 +6,9 @@
 #include <naos/sys.h>
 #include <art32/numbers.h>
 #include <art32/smooth.h>
+#include <art32/convert.h>
 #include <driver/gpio.h>
+#include <string.h>
 
 #include "buttons.h"
 #include "encoder.h"
@@ -29,6 +31,8 @@ bool use_sensor_2 = false;
 
 a32_smooth_t *sensor_smooth_1;
 a32_smooth_t *sensor_smooth_2;
+
+bool button_active = false;
 
 static void set_status() {
   // set led accordingly
@@ -192,11 +196,13 @@ static void press(buttons_type_t type, bool pressed) {
   // turn forward if cw is released
   if (type == BUTTONS_TYPE_CW && !pressed) {
     forward();
+    button_active = true;
   }
 
   // turn backwards if ccw is released
   if (type == BUTTONS_TYPE_CCW && !pressed) {
     backward();
+    button_active = true;
   }
 
   // stop motor stop is pressed
@@ -217,6 +223,7 @@ static void press(buttons_type_t type, bool pressed) {
     // approach home if buttons has been released quickly
     if (diff < 500) {
       approach(0);
+      button_active = true;
       return;
     }
 
@@ -248,6 +255,11 @@ static void monitor() {
   double raw_speed = l6470_get_speed();
   double speed = raw_speed / (micro_steps * resolution * gear_ratio);
 
+  // clear button_active once motor has fully stopped
+  if (button_active && speed == 0) {
+    button_active = false;
+  }
+
   // set parameters
   naos_set_d("position", pos);
   naos_set_d("speed", speed);
@@ -257,6 +269,70 @@ static void monitor() {
   naos_publish_d("position", pos, 0, false, NAOS_LOCAL);
   naos_publish_d("speed", speed, 0, false, NAOS_LOCAL);
   naos_publish_b("running", speed != 0, 0, false, NAOS_LOCAL);
+}
+
+static void online() {
+  // subscribe to MQTT command topics (local scope)
+  naos_subscribe("forward", 0, NAOS_LOCAL);
+  naos_subscribe("backward", 0, NAOS_LOCAL);
+  naos_subscribe("target", 0, NAOS_LOCAL);
+  naos_subscribe("stop", 0, NAOS_LOCAL);
+  naos_subscribe("reset", 0, NAOS_LOCAL);
+  naos_subscribe("home", 0, NAOS_LOCAL);
+}
+
+static void message(const char *topic, const uint8_t *payload, size_t len, naos_scope_t scope) {
+  // buttons override MQTT: ignore commands while button_active
+  if (button_active) {
+    return;
+  }
+
+  if (scope != NAOS_LOCAL) {
+    return;
+  }
+
+  // make null-terminated string from payload
+  char buf[64];
+  size_t copy_len = len < sizeof(buf) - 1 ? len : sizeof(buf) - 1;
+  memcpy(buf, payload, copy_len);
+  buf[copy_len] = '\0';
+
+  // handle "forward" command
+  if (strcmp(topic, "forward") == 0) {
+    forward();
+    return;
+  }
+
+  // handle "backward" command
+  if (strcmp(topic, "backward") == 0) {
+    backward();
+    return;
+  }
+
+  // handle "target" command
+  if (strcmp(topic, "target") == 0) {
+    double target = a32_str2d(buf);
+    approach(target);
+    return;
+  }
+
+  // handle "stop" command
+  if (strcmp(topic, "stop") == 0) {
+    stop();
+    return;
+  }
+
+  // handle "reset" command
+  if (strcmp(topic, "reset") == 0) {
+    reset();
+    return;
+  }
+
+  // handle "home" command
+  if (strcmp(topic, "home") == 0) {
+    approach(0);
+    return;
+  }
 }
 
 static naos_param_t params[] = {
@@ -295,6 +371,8 @@ static naos_config_t config = {
     .num_parameters = sizeof(params) / sizeof(naos_param_t),
     .ping_callback = ping,
     .status_callback = status,
+    .online_callback = online,
+    .message_callback = message,
     .loop_callback = loop,
     .loop_interval = 10,
     .offline_callback = offline,
